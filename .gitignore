@@ -1,6 +1,8 @@
 # ログ・一時ファイル
 *.log
 nominatim_progress.json
+geocodingjp_progress.json
+*.tmp
 
 # Claude Code
 .claude/
