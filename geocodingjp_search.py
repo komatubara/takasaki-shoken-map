@@ -24,6 +24,12 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
+# Windows: 標準出力をUTF-8に切替（店舗名にアクセント付き文字が含まれてもクラッシュしない）
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 INPUT_CSV = '高崎市民商品券取扱店一覧_geo_phase1.csv'
 PROGRESS_JSON = 'geocodingjp_progress.json'
 USER_AGENT = 'TakasakiVoucherMap/1.0 (komainu022.ryou@gmail.com; personal-use)'
