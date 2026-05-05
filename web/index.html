@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#5b3c88">
+    <meta name="description" content="高崎市民商品券の取扱店をマップで探せます">
+    <title>高崎商品券マップ</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <header id="app-header">
+        <h1>高崎商品券マップ</h1>
+        <div class="header-controls">
+            <button id="filter-btn" type="button" aria-label="業種で絞り込み">
+                <span class="icon">▼</span>
+                <span id="filter-label">業種</span>
+            </button>
+        </div>
+    </header>
+
+    <div id="map" role="application" aria-label="店舗マップ"></div>
+
+    <button id="locate-btn" type="button" aria-label="現在地へ移動" title="現在地へ移動">
+        <span class="icon">⊙</span>
+    </button>
+
+    <div id="filter-panel" hidden>
+        <div class="filter-panel-inner">
+            <div class="filter-panel-header">
+                <span>業種で絞り込み</span>
+                <button id="filter-close" type="button" aria-label="閉じる">×</button>
+            </div>
+            <input type="search" id="store-search" placeholder="店舗名・町名で検索…" autocomplete="off">
+            <div class="filter-options" id="filter-options">
+                <!-- カテゴリリストはJSで動的生成 -->
+            </div>
+            <div class="filter-actions">
+                <button id="filter-clear" type="button">すべて解除</button>
+                <button id="filter-apply" type="button" class="primary">適用</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="status-bar">
+        <span id="status-text">読み込み中…</span>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script type="module" src="./app.js"></script>
+</body>
+</html>

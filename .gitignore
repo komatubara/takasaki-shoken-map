@@ -1,8 +1,13 @@
 # ログ・一時ファイル
 *.log
+*.log.*
+*.pid
 nominatim_progress.json
 geocodingjp_progress.json
 *.tmp
+
+# スクリーンショット（テスト時の生成物）
+screenshots/
 
 # Claude Code
 .claude/
