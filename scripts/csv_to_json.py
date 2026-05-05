@@ -18,7 +18,8 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-INPUT_CSV = ROOT / '高崎市民商品券取扱店一覧_geo_phase1.csv'
+# 最終CSV (geocoding.jp + GSI フォールバック + bboxバリデーション済み)
+INPUT_CSV = ROOT / '高崎市民商品券取扱店一覧_geo_final.csv'
 OUTPUT_JSON = ROOT / 'web' / 'data' / 'stores.json'
 
 if hasattr(sys.stdout, 'reconfigure'):

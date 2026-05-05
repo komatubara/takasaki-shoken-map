@@ -81,14 +81,46 @@
 - **観測**: needs_verify=yes でも座標が高崎市外に飛ぶケースあり（例：セブン-イレブン高崎倉賀野店 → 138.79は安中市側）
 - → 最終マージ時に高崎市バウンディングボックスでバリデーションする方針
 
+### 2026-05-05〜06: geocoding.jp 全件実行 + cp932クラッシュ復旧
+- 初回実行で282/3161件処理時にUnicodeEncodeErrorで停止
+  - 原因：店舗名の `é` 文字をWindowsコンソールが扱えない
+  - 修正：`sys.stdout.reconfigure(encoding='utf-8')` を script 冒頭に追加
+- 再起動して継続、PCスリープを跨いで完走
+- 結果（ユニーク3,154件）：
+  - ok: 3,039件（needs_verify=no:18 / yes:3,021）
+  - exception: 71件 / zero_coord: 40件 / error: 4件
+
+### 2026-05-05: フロントエンド初期実装
+- `web/index.html` `web/style.css` `web/app.js` でシンプル一画面構成
+- Leaflet 1.9.4 + markercluster + 国土地理院タイル
+- 業種フィルタ・テキスト検索・現在位置取得（FAB）
+- ヘッドレスEdgeでスクショ撮影による視覚確認
+
+### 2026-05-05: GitHub Pages デプロイ
+- `gh repo create komatubara/takasaki-shoken-map --public`
+- `.github/workflows/deploy-pages.yml` で web/ をアーティファクトとしてアップロード
+- gh API で `build_type=workflow` 設定
+- 公開URL: https://komatubara.github.io/takasaki-shoken-map/
+- main push で自動再デプロイ
+
+### 2026-05-06: 最終マージ・bboxバリデーション・本番反映
+- bbox判定の初期設定 (138.85, 36.18, 139.10, 36.50) は **狭すぎ**
+  - 倉渕町・新町・榛名山町（2006年合併編入地域）が除外されてしまう
+  - GSI町代表点の実範囲を確認し (138.75, 36.18, 139.15, 36.50) に拡大
+- `scripts/merge_final.py` で結果統合
+  - geocoding.jp座標がbbox内 → 採用 (needs_verify=no→exact、yes→approx)
+  - bbox外 or 失敗 → GSI町代表点にフォールバック (town)
+- 最終内訳：
+  - exact: 17件 / approx: 3,009件 / town: 133件 / none: 2件
+  - **95.7%が店舗名検索による実位置レベルに精度向上**
+- 例: 「ジョイフーズ高崎西店」が町中心点から約220m西の実店舗位置に補正
+- 例: 上佐野町の13店舗が同一点重複から個別座標に分散
+
 ### 次のステップ
-- ユーザーがgeocoding.jp全件実行（数日かけて分割実行）
-- 完了後、bboxバリデーションを通じて最終CSV生成
-  - `needs_verify=no` かつ bbox内 → exact精度
-  - `needs_verify=yes` かつ bbox内 → approximate精度
-  - bbox外 or 失敗 → GSI町代表点にフォールバック（精度=town）
-- 重なり回避の小ジッター付加
-- フロントエンド実装着手
+- 実機での動作確認（ユーザー帰宅後）
+- 64カテゴリの整理（多すぎる場合のグルーピング）
+- PWA対応（manifest.json + service-worker.js）
+- 失敗115件のうち復旧可能な店舗の手動修正検討
 
 ---
 
