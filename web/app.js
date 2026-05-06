@@ -68,14 +68,26 @@ function popupHtml(s) {
     const mall = s.mall ? `<div class="popup-row"><span class="label">大型店</span><span class="value">${escapeHtml(s.mall)}</span></div>` : '';
     const gmapsQuery = encodeURIComponent(`${s.name} 高崎市${s.town || ''}`);
     const precisionLabel = {
+        'manual': '手動補正',
         'exact': '番地レベル',
         'approx': '町・周辺',
-        'town': '町中心',
+        'town': '町中心点（目安）',
         'none': '位置情報なし',
     }[s.precision] || s.precision;
 
+    // 低精度（町中心点フォールバック）の店舗には目立つ警告を表示
+    const isLowPrecision = s.precision === 'town' || s.precision === 'none';
+    const warning = isLowPrecision
+        ? `<div class="popup-warning">
+             ⚠️ 正確な位置情報を取得できませんでした。
+             表示位置は<strong>町の中心付近</strong>の目安です。実際の店舗位置とは数百m〜数km異なる場合があります。
+             下の「Googleマップで見る」で実際の位置をご確認ください。
+           </div>`
+        : '';
+
     return `
         <div class="popup-name">${escapeHtml(s.name)}</div>
+        ${warning}
         <div class="popup-row"><span class="label">業種</span><span class="value">${escapeHtml(s.category || '—')}</span></div>
         <div class="popup-row"><span class="label">町名</span><span class="value">${escapeHtml(s.town || '—')}</span></div>
         <div class="popup-row"><span class="label">電話</span><span class="value">${phoneLink}</span></div>

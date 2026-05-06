@@ -305,6 +305,21 @@ html, body {
     color: var(--text-muted);
 }
 
+.popup-warning {
+    background: #fff8e1;
+    border-left: 4px solid #f0a830;
+    padding: 8px 10px;
+    margin: 8px 0 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #614a00;
+    border-radius: 4px;
+}
+
+.popup-warning strong {
+    color: #4d3a00;
+}
+
 .popup-actions {
     display: flex;
     gap: 6px;

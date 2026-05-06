@@ -10,6 +10,7 @@ PHASE1_CSV = ROOT / '高崎市民商品券取扱店一覧_geo_phase1.csv'
 FINAL_CSV = ROOT / '高崎市民商品券取扱店一覧_geo_final.csv'
 GEOCODING_PROGRESS = ROOT / 'geocodingjp_progress.json'
 TOWN_COORDS = ROOT / 'town_coords.json'
+CORRECTIONS_CSV = ROOT / 'corrections_template.csv'  # 手動補正座標（任意）
 WEB_DATA_JSON = ROOT / 'web' / 'data' / 'stores.json'
 
 # ===== geocoding.jp API 設定 =====
