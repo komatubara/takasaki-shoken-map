@@ -1,11 +1,11 @@
-"""
-最終マージスクリプト
+"""最終マージスクリプト
+
 geocoding.jp の結果 + GSI 町代表点を統合し、bboxバリデーション込みで
 最終CSV (高崎市民商品券取扱店一覧_geo_final.csv) を生成する。
 
 採用ロジック:
   1. geocoding.jp で座標が取得でき、かつ高崎市bbox内 → 採用
-     - needs_verify=no → 精度 exact
+     - needs_verify=no  → 精度 exact
      - needs_verify=yes → 精度 approx
   2. それ以外（API失敗 or bbox外） → GSI町代表点
      - 精度 town
@@ -17,36 +17,25 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-INPUT_CSV = ROOT / '高崎市民商品券取扱店一覧.csv'
-GEOCODING_JSON = ROOT / 'geocodingjp_progress.json'
-TOWN_COORDS_JSON = ROOT / 'town_coords.json'
-OUTPUT_CSV = ROOT / '高崎市民商品券取扱店一覧_geo_final.csv'
-
-# 高崎市の現実的な範囲（2006年合併後の倉渕町・新町・榛名山町まで含む）
-TAKASAKI_BBOX = (138.75, 36.18, 139.15, 36.50)  # west, south, east, north
-
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-
-
-def in_bbox(lat, lng):
-    return (TAKASAKI_BBOX[1] <= lat <= TAKASAKI_BBOX[3] and
-            TAKASAKI_BBOX[0] <= lng <= TAKASAKI_BBOX[2])
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib import config
+from lib.geocoding import in_takasaki_bbox
+from lib.progress import setup_utf8_stdout
 
 
 def main():
-    # 入力データ読込
-    with open(GEOCODING_JSON, encoding='utf-8') as f:
+    setup_utf8_stdout()
+
+    with open(config.GEOCODING_PROGRESS, encoding='utf-8') as f:
         gj_results = json.load(f)
-    with open(TOWN_COORDS_JSON, encoding='utf-8') as f:
+    with open(config.TOWN_COORDS, encoding='utf-8') as f:
         town_coords = json.load(f)
 
     stats = {'exact': 0, 'approx': 0, 'town': 0, 'none': 0,
              'gj_used': 0, 'gj_outlier': 0, 'gj_failed': 0}
 
     rows_out = []
-    with open(INPUT_CSV, 'r', encoding='utf-8-sig') as f:
+    with open(config.INPUT_CSV, 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
             store = (row.get('店舗名') or '').strip()
@@ -62,7 +51,7 @@ def main():
 
                 if gj and gj.get('status') == 'ok':
                     g_lat, g_lng = gj.get('lat'), gj.get('lng')
-                    if g_lat and g_lng and in_bbox(g_lat, g_lng):
+                    if g_lat and g_lng and in_takasaki_bbox(g_lat, g_lng):
                         lat, lng = g_lat, g_lng
                         precision = 'exact' if gj.get('needs_verify') == 'no' else 'approx'
                         source = 'geocoding.jp'
@@ -87,15 +76,14 @@ def main():
             row['ソース'] = source
             rows_out.append(row)
 
-    # 出力
     fieldnames = ['店舗名', '町名', '電話番号', '取り扱い商品・サービス', '大型店',
                   'lat', 'lng', '精度', 'ソース']
-    with open(OUTPUT_CSV, 'w', encoding='utf-8-sig', newline='') as f:
+    with open(config.FINAL_CSV, 'w', encoding='utf-8-sig', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows_out)
 
-    print(f"✓ 出力: {OUTPUT_CSV.name}")
+    print(f"✓ 出力: {config.FINAL_CSV.name}")
     print(f"  全店舗数: {len(rows_out)}件")
     print()
     print(f"=== 精度内訳 ===")

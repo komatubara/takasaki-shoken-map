@@ -1,14 +1,13 @@
-"""
-CSV → web/data/stores.json 変換
+"""CSV → web/data/stores.json 変換
 
-入力: 高崎市民商品券取扱店一覧_geo_phase1.csv（暫定データ。最終マージ後に差し替え予定）
+入力: 高崎市民商品券取扱店一覧_geo_final.csv
 出力: web/data/stores.json
 
 機能:
 - 同一町に重なる店舗にハッシュベースのジッター付加（最大±50m程度）
 - 店舗IDの自動採番
 - カテゴリ一覧の抽出
-- メタ情報（生成日時、件数、精度内訳）を埋め込み
+- メタ情報（生成日時・件数・精度内訳）を埋め込み
 """
 import csv
 import hashlib
@@ -17,30 +16,26 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-# 最終CSV (geocoding.jp + GSI フォールバック + bboxバリデーション済み)
-INPUT_CSV = ROOT / '高崎市民商品券取扱店一覧_geo_final.csv'
-OUTPUT_JSON = ROOT / 'web' / 'data' / 'stores.json'
-
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib import config
+from lib.progress import setup_utf8_stdout
 
 
 def jitter(seed_str, scale_lat=0.00025, scale_lng=0.0003):
     """店舗名+町名から決定的に座標オフセットを生成（同じ入力→同じオフセット）"""
     h = hashlib.md5(seed_str.encode('utf-8')).digest()
-    # ハッシュの最初の8バイトを2つの-1〜1の値に変換
     fx = (int.from_bytes(h[0:4], 'big') / 0xFFFFFFFF) * 2 - 1
     fy = (int.from_bytes(h[4:8], 'big') / 0xFFFFFFFF) * 2 - 1
     return fx * scale_lat, fy * scale_lng
 
 
 def main():
+    setup_utf8_stdout()
     stores = []
     categories = set()
     precision_counts = {'town': 0, 'none': 0, 'exact': 0, 'approx': 0}
 
-    with open(INPUT_CSV, 'r', encoding='utf-8-sig') as f:
+    with open(config.FINAL_CSV, 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for i, row in enumerate(reader):
             name = (row.get('店舗名') or '').strip()
@@ -87,7 +82,7 @@ def main():
     output = {
         'meta': {
             'generated_at': datetime.now().isoformat(timespec='seconds'),
-            'source': INPUT_CSV.name,
+            'source': config.FINAL_CSV.name,
             'count': len(stores),
             'precision_counts': precision_counts,
         },
@@ -95,12 +90,12 @@ def main():
         'stores': stores,
     }
 
-    OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUTPUT_JSON, 'w', encoding='utf-8') as f:
+    config.WEB_DATA_JSON.parent.mkdir(parents=True, exist_ok=True)
+    with open(config.WEB_DATA_JSON, 'w', encoding='utf-8') as f:
         json.dump(output, f, ensure_ascii=False, separators=(',', ':'))
 
-    size_kb = OUTPUT_JSON.stat().st_size / 1024
-    print(f"✓ 出力: {OUTPUT_JSON.relative_to(ROOT)}")
+    size_kb = config.WEB_DATA_JSON.stat().st_size / 1024
+    print(f"✓ 出力: {config.WEB_DATA_JSON.relative_to(config.ROOT)}")
     print(f"  店舗数: {len(stores)}件")
     print(f"  カテゴリ数: {len(categories)}件")
     print(f"  精度内訳: {precision_counts}")
