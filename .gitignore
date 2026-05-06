@@ -5,6 +5,7 @@
 nominatim_progress.json
 geocodingjp_progress.json
 *.tmp
+*.backup
 
 # スクリーンショット（テスト時の生成物）
 screenshots/
